@@ -5,6 +5,7 @@ import AsyncHandler from "../utils/AsyncHandler.js"
 import { User } from "../models/user.model.js";
 import { z } from "zod";
 import { response } from "express";
+import { Account } from "../models/accounts.modal.js";
 
 const signUpAuthentication = z.object({
     userName: z.string().min(3).max(30).trim().toLowerCase(),
@@ -22,9 +23,6 @@ const updateUserInfAuthentication = z.object({
 })
 
 const userSignUp = AsyncHandler(async (req, res) => {
-    // const {userName , firstName , lastName , password} = req.body;
-    // const{success} = signUpAuthentication.safeParse(req.body);
-    // if(!success) throw new ApiError(404 , "Fields are empty or not filled properly !")
 
     const result = signUpAuthentication.safeParse(req.body);
     if (!result.success) {
@@ -48,10 +46,14 @@ const userSignUp = AsyncHandler(async (req, res) => {
     })
 
     const createdUser = await User.findById(user._id).select("-password");
-
     if (!createdUser) throw new ApiError(404, "unable to create a user");
 
-    return res.status(200).json(new ApiResponse(200, createdUser, "successfully created the user"));
+    const account = await Account.create({
+        _id:user._id,
+        balance:Math.floor(Math.random()*10000)
+    })
+
+    return res.status(200).json(new ApiResponse(200, {createdUser, account}, "successfully created the user"));
 })
 
 const userSignIn = AsyncHandler(async (req, res) => {
