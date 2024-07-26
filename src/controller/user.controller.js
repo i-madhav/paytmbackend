@@ -11,10 +11,14 @@ const signUpAuthentication = z.object({
     firstName: z.string().min(3).max(30).trim().toLowerCase(),
     lastName: z.string().min(3).max(30).trim().toLowerCase(),
     // giving regex to my password that it should follow a certain way !!
-    password: z.string()
-        .min(8, "Password must be at least 8 characters long")
-        .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/,
-            "Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character")
+    password: z.string().min(8, "Password must be at least 8 characters long")
+})
+
+const updateUserInfAuthentication = z.object({
+    firstName: z.string().min(3).max(30).trim().toLowerCase(),
+    lastName: z.string().min(3).max(30).trim().toLowerCase(),
+    oldPassword: z.string().minLength(8, "Password must be at least 8 character long"),
+    newPassword: z.string().minLength(8, "Password must be at least 8 character long")
 })
 
 const userSignUp = AsyncHandler(async (req, res) => {
@@ -49,4 +53,65 @@ const userSignUp = AsyncHandler(async (req, res) => {
 
     return res.status(200).json(new ApiResponse(200, createdUser, "successfully created the user"));
 })
-export { userSignUp };
+
+const userSignIn = AsyncHandler(async (req, res) => {
+    const { userName, password } = req.body;
+    if (!userName || !password) throw new ApiError(400, "Either of the fields are wrong ! please try again");
+
+    const user = await User.findOne({
+        $or: [{ userName }]
+    })
+
+    console.log(user);
+
+    if (!user) throw new ApiError(400, "Invalid user credentials");
+    const isPasswordValid = await user.passwordValid(password);
+
+    if (!isPasswordValid) throw new ApiError(400, "Incorrect password");
+
+    const accessToken = await user.generateAccessToken();
+    if (!accessToken) throw new ApiError(404, "accessToken not found");
+
+    const SignInUser = await User.findById(user._id).select("-password");
+
+    const options = {
+        httpOnly: true,
+        secure: true
+    }
+
+    return res.status(200)
+        .cookie("accessToken", accessToken, options)
+        .json(new ApiResponse(200, {
+            SignInUser, accessToken
+        }, "user signIn successfully"))
+
+});
+
+const updateUserInformation = AsyncHandler(async (req, res) => {
+    const result = updateUserInfAuthentication.safeParse(req.body);
+
+    if (!result.success) {
+        const errMssg = result.error.errors.map(err => err.message).join(", ");
+        throw new ApiError(401, `${errMssg}`);
+    }
+
+    const { firstName, lastName, oldpassword, newpassword } = result.data;
+
+    const user = await User.findById(req?.user?._id)
+    const oldPass = await user.isPasswordValid(oldpassword);
+
+    if (!oldPass) throw new ApiError(401, "Enter your previous password correctly");
+
+    if (firstName) user.firstName = firstName;
+    if (lastName) user.lastName = lastName;
+    if (newpassword) user.password = newpassword
+
+    await user.save({ validation: false });
+
+    const updatedUser = await User.findById(user._id).select("-password");
+    
+    return res.status(200)
+        .json(new ApiResponse(200, { updatedUser }, "user Updated Successfully"));
+})
+
+export { userSignUp, userSignIn, updateUserInformation };
