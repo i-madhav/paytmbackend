@@ -17,8 +17,8 @@ const signUpAuthentication = z.object({
 const updateUserInfAuthentication = z.object({
     firstName: z.string().min(3).max(30).trim().toLowerCase(),
     lastName: z.string().min(3).max(30).trim().toLowerCase(),
-    oldPassword: z.string().minLength(8, "Password must be at least 8 character long"),
-    newPassword: z.string().minLength(8, "Password must be at least 8 character long")
+    oldpassword: z.string().min(8, "Password must be at least 8 character long"),
+    newpassword: z.string().min(8, "Password must be at least 8 character long")
 })
 
 const userSignUp = AsyncHandler(async (req, res) => {
@@ -98,7 +98,7 @@ const updateUserInformation = AsyncHandler(async (req, res) => {
     const { firstName, lastName, oldpassword, newpassword } = result.data;
 
     const user = await User.findById(req?.user?._id)
-    const oldPass = await user.isPasswordValid(oldpassword);
+    const oldPass = await user.passwordValid(oldpassword);
 
     if (!oldPass) throw new ApiError(401, "Enter your previous password correctly");
 
@@ -109,9 +109,36 @@ const updateUserInformation = AsyncHandler(async (req, res) => {
     await user.save({ validation: false });
 
     const updatedUser = await User.findById(user._id).select("-password");
-    
+
     return res.status(200)
         .json(new ApiResponse(200, { updatedUser }, "user Updated Successfully"));
+});
+
+const getSearchedUser = AsyncHandler(async (req, res) => {
+    const { searchText } = req.body;
+    if(!searchText || searchText.trim().length === 0) return
+
+    if (!searchText) return;
+    const users = await User.find({
+        $or: [
+            {
+                firstName: {
+                    // used to find substring in the database
+                    "$regex": searchText
+                }
+            },
+            {
+                lastName: {
+                    "$regex": searchText
+                }
+            }
+        ]
+    }).select("-password");
+
+
+
+    return res.status(200)
+        .json(new ApiResponse(200, users.map(user => ({ firstName: user.firstName, lastName: user.lastName, _id: user._id })), "All the users matching with the string"));
 })
 
-export { userSignUp, userSignIn, updateUserInformation };
+export { userSignUp, userSignIn, updateUserInformation, getSearchedUser};

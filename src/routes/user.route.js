@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { updateUserInformation, userSignIn, userSignUp } from "../controller/user.controller.js";
+import { getSearchedUser, updateUserInformation, userSignIn, userSignUp } from "../controller/user.controller.js";
 import { authentication } from "../middleware/auth.middleware.js";
 
 const router = Router();
@@ -8,4 +8,5 @@ router.route("/signin").post(userSignIn);
 
 // secured routes
 router.route("/updateuser").post(authentication , updateUserInformation);
+router.route("/bulk").get(authentication , getSearchedUser);
 export default router;
