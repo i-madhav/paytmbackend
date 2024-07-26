@@ -7,5 +7,5 @@ router.route("/signup").post(userSignUp);
 router.route("/signin").post(userSignIn);
 
 // secured routes
-router.route("updateuser").post(authentication , updateUserInformation)
+router.route("/updateuser").post(authentication , updateUserInformation);
 export default router;
