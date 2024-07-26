@@ -5,4 +5,5 @@ const routerInd = Router();
 
 routerInd.use("/user" , userRouter);
 routerInd.use("/account" , accRoute)
+
 export default routerInd;

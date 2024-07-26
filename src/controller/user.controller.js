@@ -46,10 +46,11 @@ const userSignUp = AsyncHandler(async (req, res) => {
     })
 
     const createdUser = await User.findById(user._id).select("-password");
+    const createdUserId = createdUser._id;
     if (!createdUser) throw new ApiError(404, "unable to create a user");
 
     const account = await Account.create({
-        _id:user._id,
+        user:createdUserId,
         balance:Math.floor(Math.random()*10000)
     })
 
