@@ -65,8 +65,6 @@ const userSignIn = AsyncHandler(async (req, res) => {
         $or: [{ userName }]
     })
 
-    console.log(user);
-
     if (!user) throw new ApiError(400, "Invalid user credentials");
     const isPasswordValid = await user.passwordValid(password);
 
