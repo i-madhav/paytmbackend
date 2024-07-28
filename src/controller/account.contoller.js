@@ -27,6 +27,8 @@ const transferMoney = AsyncHandler(async (req, res) => {
     session.startTransaction();
 
     const result = transferMoneyInforAuthentication.safeParse(req.body);
+    console.log(req.body);
+    console.log(result);
     if (!result.success) {
         const errMssg = result.error.errors.map(err => err.message).join(", ");
         throw new ApiError(400, `Enter Strong credentials ${errMssg}`)

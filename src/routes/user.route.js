@@ -8,5 +8,5 @@ router.route("/signin").post(userSignIn);
 
 // secured routes
 router.route("/updateuser").post(authentication , updateUserInformation);
-router.route("/bulk").get(authentication , getSearchedUser);
+router.route("/bulk").post(authentication , getSearchedUser);
 export default router;

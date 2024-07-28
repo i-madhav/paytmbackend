@@ -50,11 +50,11 @@ const userSignUp = AsyncHandler(async (req, res) => {
     if (!createdUser) throw new ApiError(404, "unable to create a user");
 
     const account = await Account.create({
-        user:createdUserId,
-        balance:Math.floor(Math.random()*10000)
+        user: createdUserId,
+        balance: Math.floor(Math.random() * 10000)
     })
 
-    return res.status(200).json(new ApiResponse(200, {createdUser, account}, "successfully created the user"));
+    return res.status(200).json(new ApiResponse(200, { createdUser, account }, "successfully created the user"));
 })
 
 const userSignIn = AsyncHandler(async (req, res) => {
@@ -117,7 +117,7 @@ const updateUserInformation = AsyncHandler(async (req, res) => {
 
 const getSearchedUser = AsyncHandler(async (req, res) => {
     const { searchText } = req.body;
-    if(!searchText || searchText.trim().length === 0) return
+    if (!searchText || searchText.trim().length === 0) return
 
     if (!searchText) return;
     const users = await User.find({
@@ -142,4 +142,4 @@ const getSearchedUser = AsyncHandler(async (req, res) => {
         .json(new ApiResponse(200, users.map(user => ({ firstName: user.firstName, lastName: user.lastName, _id: user._id })), "All the users matching with the string"));
 })
 
-export { userSignUp, userSignIn, updateUserInformation, getSearchedUser};
+export { userSignUp, userSignIn, updateUserInformation, getSearchedUser };
